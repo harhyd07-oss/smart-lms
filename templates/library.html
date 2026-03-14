@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Resource Library — Smart LMS{% endblock %}
+
+{% block content %}
+
+<div class="d-flex" style="min-height: 100vh;">
+
+    <!-- Sidebar (same as dashboard) -->
+    <div class="sidebar d-flex flex-column p-3" style="width: 240px; min-height: 100vh; background-color: #1e293b;">
+        <div class="text-center mb-4 mt-2">
+            <h5 class="text-white fw-bold">📚 Smart LMS</h5>
+            <small class="text-secondary">Welcome, {{ student_name }}</small>
+        </div>
+        <hr class="text-secondary">
+        <nav class="nav flex-column gap-1">
+            <a href="/dashboard"  class="nav-link text-secondary">🏠 Dashboard</a>
+            <a href="/library"    class="nav-link text-white active-link">📖 Resource Library</a>
+            <a href="/upload"     class="nav-link text-secondary">⬆️ Upload Resource</a>
+            <a href="/progress"   class="nav-link text-secondary">📊 My Progress</a>
+            <a href="/courses"    class="nav-link text-secondary">🎓 Courses</a>
+        </nav>
+        <div class="mt-auto">
+            <hr class="text-secondary">
+            <a href="/logout" class="nav-link text-danger">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="flex-grow-1 bg-light">
+
+        <!-- Navbar -->
+        <nav class="navbar navbar-light bg-white border-bottom px-4 py-3">
+            <span class="navbar-brand mb-0 h5 fw-bold">Resource Library</span>
+        </nav>
+
+        <div class="p-4">
+
+            <!-- Algorithm info badge -->
+            <div class="alert alert-info border-0 mb-4">
+                <small>
+                    🧠 <strong>DAA Concept:</strong> 
+                    Resources are sorted using <strong>Merge Sort (O(n log n))</strong> 
+                    and recommended using a <strong>Greedy Algorithm</strong>.
+                </small>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="GET" action="/library">
+                        <div class="row g-3 align-items-end">
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Search</label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    name="search"
+                                    placeholder="Search by title..."
+                                    value="{{ search or '' }}"
+                                >
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Subject</label>
+                                <select class="form-select" name="course">
+                                    <option value="">All Subjects</option>
+                                    <option value="DAA"                {{ 'selected' if course == 'DAA' }}>DAA</option>
+                                    <option value="Operating Systems"  {{ 'selected' if course == 'Operating Systems' }}>Operating Systems</option>
+                                    <option value="DBMS"               {{ 'selected' if course == 'DBMS' }}>DBMS</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Difficulty</label>
+                                <select class="form-select" name="difficulty">
+                                    <option value="">All Levels</option>
+                                    <option value="Easy"   {{ 'selected' if difficulty == 'Easy' }}>Easy</option>
+                                    <option value="Medium" {{ 'selected' if difficulty == 'Medium' }}>Medium</option>
+                                    <option value="Hard"   {{ 'selected' if difficulty == 'Hard' }}>Hard</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    Filter
+                                </button>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sort info -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0">
+                    {{ resources|length }} resource(s) found
+                </h6>
+                <small class="text-muted">Sorted by rating (Merge Sort)</small>
+            </div>
+
+            <!-- Resource Cards Grid -->
+            <div class="row g-3">
+                {% if resources %}
+                    {% for resource in resources %}
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+
+                                <div class="d-flex gap-2 mb-2">
+                                    {% if resource['type'] == 'pdf' %}
+                                        <span class="badge bg-danger">PDF</span>
+                                    {% elif resource['type'] == 'video' %}
+                                        <span class="badge bg-primary">Video</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ resource['type'] }}</span>
+                                    {% endif %}
+
+                                    {% if resource['difficulty'] == 'Easy' %}
+                                        <span class="badge bg-success">Easy</span>
+                                    {% elif resource['difficulty'] == 'Medium' %}
+                                        <span class="badge bg-warning text-dark">Medium</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Hard</span>
+                                    {% endif %}
+                                </div>
+
+                                <h6 class="card-title fw-bold">{{ resource['title'] }}</h6>
+                                <p class="card-text text-muted small">
+                                    {{ resource['description'] }}
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">📚 {{ resource['course'] }}</small>
+                                    <small class="text-warning">⭐ {{ resource['rating'] }}</small>
+                                </div>
+                                <small class="text-muted">⬇️ {{ resource['downloads'] }} downloads</small>
+
+                            </div>
+                            <div class="card-footer bg-transparent border-0 pb-3">
+                                <a href="/download/{{ resource['resource_id'] }}"
+                                   class="btn btn-outline-primary btn-sm w-100">
+                                    ⬇️ Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12 text-center py-5">
+                        <h5 class="text-muted">No resources found</h5>
+                        <p class="text-muted">Try adjusting your filters or 
+                            <a href="/upload">upload a resource</a>
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
