@@ -219,3 +219,41 @@ def get_all_resources():
     resources = cursor.fetchall()
     conn.close()
     return resources
+def get_courses():
+    """
+    Returns all unique courses with their resource count
+    and average rating.
+    """
+    conn   = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT 
+            course,
+            COUNT(*)       AS resource_count,
+            AVG(rating)    AS avg_rating,
+            SUM(downloads) AS total_downloads
+        FROM resources
+        GROUP BY course
+        ORDER BY course
+    ''')
+    courses = cursor.fetchall()
+    conn.close()
+    return courses
+
+
+def get_resources_by_course(course):
+    """
+    Returns all resources for a specific course.
+    """
+    conn   = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT resource_id, title, description, type,
+               course, difficulty, rating, downloads
+        FROM resources
+        WHERE course = ?
+        ORDER BY rating DESC
+    ''', (course,))
+    resources = cursor.fetchall()
+    conn.close()
+    return resources

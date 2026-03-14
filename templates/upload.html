@@ -16,7 +16,8 @@
             <a href="/library"   class="nav-link text-secondary">📖 Resource Library</a>
             <a href="/upload"    class="nav-link text-white active-link">⬆️ Upload Resource</a>
             <a href="/progress"  class="nav-link text-secondary">📊 My Progress</a>
-            <a href="/courses"   class="nav-link text-secondary">🎓 Courses</a>
+            <a href="/courses"     class="nav-link text-secondary">🎓 Courses</a>
+            
         </nav>
         <div class="mt-auto">
             <hr class="text-secondary">
@@ -33,15 +34,7 @@
 
         <div class="p-4">
 
-            <!-- OS Concept badge -->
-            <div class="alert alert-warning border-0 mb-4">
-                <small>
-                    🖥️ <strong>OS Concept:</strong>
-                    File upload uses <strong>OS File Management</strong> to store
-                    files in the filesystem, and <strong>Multithreading</strong>
-                    to log activity in a background thread.
-                </small>
-            </div>
+            
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}

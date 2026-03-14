@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% block title %}Courses — Smart LMS{% endblock %}
+
+{% block content %}
+<div class="d-flex" style="min-height: 100vh;">
+
+    <!-- Sidebar -->
+    <div class="sidebar d-flex flex-column p-3" style="width: 240px; min-height: 100vh; background-color: #1e293b;">
+        <div class="text-center mb-4 mt-2">
+            <h5 class="text-white fw-bold">📚 Smart LMS</h5>
+            <small class="text-secondary">Welcome, {{ student_name }}</small>
+        </div>
+        <hr class="text-secondary">
+        <nav class="nav flex-column gap-1">
+            <a href="/dashboard"  class="nav-link text-secondary">🏠 Dashboard</a>
+            <a href="/library"    class="nav-link text-secondary">📖 Resource Library</a>
+            <a href="/upload"     class="nav-link text-secondary">⬆️ Upload Resource</a>
+            <a href="/progress"   class="nav-link text-secondary">📊 My Progress</a>
+            <a href="/courses"    class="nav-link text-white active-link">🎓 Courses</a>
+        </nav>
+        <div class="mt-auto">
+            <hr class="text-secondary">
+            <a href="/logout" class="nav-link text-danger">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="flex-grow-1 bg-light">
+
+        <nav class="navbar navbar-light bg-white border-bottom px-4 py-3">
+            <span class="navbar-brand mb-0 h5 fw-bold">🎓 Courses</span>
+        </nav>
+
+        <div class="p-4">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Course cards -->
+            <div class="row g-4 mb-4">
+                {% if courses %}
+                    {% for course in courses %}
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+
+                                <!-- Course icon based on name -->
+                                <div class="mb-3" style="font-size: 2rem;">
+                                    {% if 'OS' in course['course'] or 'Operating' in course['course'] %}
+                                        🖥️
+                                    {% elif 'DAA' in course['course'] or 'Algorithm' in course['course'] %}
+                                        🧮
+                                    {% elif 'DBMS' in course['course'] or 'Database' in course['course'] %}
+                                        🗄️
+                                    {% elif 'Math' in course['course'] %}
+                                        📐
+                                    {% elif 'Science' in course['course'] %}
+                                        🔬
+                                    {% else %}
+                                        📚
+                                    {% endif %}
+                                </div>
+
+                                <h5 class="fw-bold">{{ course['course'] }}</h5>
+
+                                <div class="d-flex gap-3 mb-3">
+                                    <small class="text-muted">
+                                        📄 {{ course['resource_count'] }} resources
+                                    </small>
+                                    <small class="text-warning">
+                                        ⭐ {{ "%.1f"|format(course['avg_rating'] or 0) }}
+                                    </small>
+                                    <small class="text-muted">
+                                        ⬇️ {{ course['total_downloads'] }}
+                                    </small>
+                                </div>
+
+                                <!-- Progress bar for this course -->
+                                {% set pct = progress_map.get(course['course'], 0) %}
+                                <div class="mb-1 d-flex justify-content-between">
+                                    <small class="text-muted">Your progress</small>
+                                    <small class="fw-bold">{{ pct|int }}%</small>
+                                </div>
+                                <div class="progress mb-3" style="height: 8px;">
+                                    <div class="progress-bar
+                                        {% if pct >= 70 %}bg-success
+                                        {% elif pct >= 40 %}bg-primary
+                                        {% else %}bg-warning{% endif %}"
+                                         style="width: {{ pct }}%">
+                                    </div>
+                                </div>
+
+                                <a href="/courses?course={{ course['course'] }}"
+                                   class="btn btn-outline-primary btn-sm w-100">
+                                    View Resources →
+                                </a>
+
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12 text-center py-5">
+                        <h5 class="text-muted">No courses available yet</h5>
+                        <p class="text-muted">
+                            <a href="/upload">Upload a resource</a> to create a course
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Selected course resources -->
+            {% if selected_course and course_resources %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">
+                        📖 {{ selected_course }} — Resources
+                    </h5>
+                    <div class="row g-3">
+                        {% for resource in course_resources %}
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <div class="d-flex gap-2 mb-2">
+                                        {% if resource['type'] == 'pdf' %}
+                                            <span class="badge bg-danger">PDF</span>
+                                        {% elif resource['type'] == 'video' %}
+                                            <span class="badge bg-primary">Video</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                {{ resource['type'] }}
+                                            </span>
+                                        {% endif %}
+                                        {% if resource['difficulty'] == 'Easy' %}
+                                            <span class="badge bg-success">Easy</span>
+                                        {% elif resource['difficulty'] == 'Medium' %}
+                                            <span class="badge bg-warning text-dark">Medium</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Hard</span>
+                                        {% endif %}
+                                    </div>
+                                    <h6 class="fw-bold">{{ resource['title'] }}</h6>
+                                    <p class="text-muted small">{{ resource['description'] }}</p>
+                                    <small class="text-warning">⭐ {{ resource['rating'] }}</small>
+                                </div>
+                                <div class="card-footer bg-transparent border-0 pb-3">
+                                    <a href="/download/{{ resource['resource_id'] }}"
+                                       class="btn btn-outline-primary btn-sm w-100 mb-1">
+                                        ⬇️ Download
+                                    </a>
+                                    <a href="/similar/{{ resource['resource_id'] }}"
+                                       class="btn btn-outline-secondary btn-sm w-100">
+                                        🔍 Find Similar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

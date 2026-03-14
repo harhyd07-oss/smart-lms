@@ -18,7 +18,8 @@
             <a href="/library"    class="nav-link text-white active-link">📖 Resource Library</a>
             <a href="/upload"     class="nav-link text-secondary">⬆️ Upload Resource</a>
             <a href="/progress"   class="nav-link text-secondary">📊 My Progress</a>
-            <a href="/courses"    class="nav-link text-secondary">🎓 Courses</a>
+            <a href="/courses"     class="nav-link text-secondary">🎓 Courses</a>
+            
         </nav>
         <div class="mt-auto">
             <hr class="text-secondary">
@@ -36,14 +37,7 @@
 
         <div class="p-4">
 
-            <!-- Algorithm info badge -->
-            <div class="alert alert-info border-0 mb-4">
-                <small>
-                    🧠 <strong>DAA Concept:</strong> 
-                    Resources are sorted using <strong>Merge Sort (O(n log n))</strong> 
-                    and recommended using a <strong>Greedy Algorithm</strong>.
-                </small>
-            </div>
+            
 
             <!-- Search and Filters -->
             <div class="card border-0 shadow-sm mb-4">
@@ -98,7 +92,14 @@
                 <h6 class="fw-bold mb-0">
                     {{ resources|length }} resource(s) found
                 </h6>
-                <small class="text-muted">Sorted by rating (Merge Sort)</small>
+                {% if similar_title %}
+                    <small class="text-muted">
+                        Showing resources similar to <strong>{{ similar_title }}</strong>
+                        — <a href="/library">View all resources</a>
+                    </small>
+                {% else %}
+                    <small class="text-muted">Sorted by rating (Merge Sort)</small>
+                {% endif %}
             </div>
 
             <!-- Resource Cards Grid -->
@@ -141,9 +142,13 @@
                             </div>
                             <div class="card-footer bg-transparent border-0 pb-3">
                                 <a href="/download/{{ resource['resource_id'] }}"
-                                   class="btn btn-outline-primary btn-sm w-100">
-                                    ⬇️ Download
-                                </a>
+                               class="btn btn-outline-primary btn-sm w-100 mb-1">
+                                ⬇️ Download
+                            </a>
+                            <a href="/similar/{{ resource['resource_id'] }}"
+                               class="btn btn-outline-secondary btn-sm w-100">
+                                🔍 Find Similar
+                            </a>
                             </div>
                         </div>
                     </div>
