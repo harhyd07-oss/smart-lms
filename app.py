@@ -76,14 +76,23 @@ def register():
 # ─── DASHBOARD ────────────────────────────────────────────────────────────────
 @app.route('/dashboard')
 def dashboard():
-    # If not logged in, send back to login page
-    # This is called "route protection"
     if 'student_id' not in session:
         flash('Please log in first.', 'warning')
         return redirect(url_for('login'))
 
+    student_id = session['student_id']
+
+    # Fetch real data from database
+    from database.db import get_recommended_resources, get_recent_activity, get_student_progress
+    recommended = get_recommended_resources(limit=3)
+    activity    = get_recent_activity(student_id, limit=5)
+    progress    = get_student_progress(student_id)
+
     return render_template('dashboard.html',
-                           student_name=session['student_name'])
+                           student_name=session['student_name'],
+                           recommended=recommended,
+                           activity=activity,
+                           progress=progress)
 
 
 # ─── LOGOUT ───────────────────────────────────────────────────────────────────

@@ -3,11 +3,245 @@
 {% block title %}Dashboard — Smart LMS{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-center align-items-center min-vh-100">
-    <div class="text-center">
-        <h1>🎉 Flask is Working!</h1>
-        <p class="text-muted">Dashboard coming in Step 2</p>
-        <a href="/" class="btn btn-outline-primary">← Back to Login</a>
+
+<!-- 
+    Overall layout: fixed sidebar on left, everything else scrolls on right.
+    We use Bootstrap's flexbox utilities for this.
+-->
+<div class="d-flex" style="min-height: 100vh;">
+
+    <!-- ═══════════════════════════════════════════════════
+         LEFT SIDEBAR
+         Fixed width, dark background, stacks nav links
+    ══════════════════════════════════════════════════════ -->
+    <div class="sidebar d-flex flex-column p-3" style="width: 240px; min-height: 100vh; background-color: #1e293b;">
+
+        <!-- Brand -->
+        <div class="text-center mb-4 mt-2">
+            <h5 class="text-white fw-bold">📚 Smart LMS</h5>
+            <small class="text-secondary">Welcome, {{ student_name }}</small>
+        </div>
+
+        <hr class="text-secondary">
+
+        <!-- Navigation Links -->
+        <nav class="nav flex-column gap-1">
+            <a href="/dashboard" class="nav-link text-white active-link">
+                🏠 Dashboard
+            </a>
+            <a href="/library" class="nav-link text-secondary">
+                📖 Resource Library
+            </a>
+            <a href="/upload" class="nav-link text-secondary">
+                ⬆️ Upload Resource
+            </a>
+            <a href="/progress" class="nav-link text-secondary">
+                📊 My Progress
+            </a>
+            <a href="/courses" class="nav-link text-secondary">
+                🎓 Courses
+            </a>
+        </nav>
+
+        <!-- Logout at bottom -->
+        <div class="mt-auto">
+            <hr class="text-secondary">
+            <a href="/logout" class="nav-link text-danger">
+                🚪 Logout
+            </a>
+        </div>
+
     </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         MAIN CONTENT AREA
+         Takes remaining width, has its own scroll
+    ══════════════════════════════════════════════════════ -->
+    <div class="flex-grow-1 bg-light">
+
+        <!-- TOP NAVBAR -->
+        <nav class="navbar navbar-light bg-white border-bottom px-4 py-3">
+            <span class="navbar-brand mb-0 h5 fw-bold">Dashboard</span>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Search bar -->
+                <input 
+                    type="text" 
+                    class="form-control form-control-sm" 
+                    placeholder="Search resources..."
+                    style="width: 220px;"
+                >
+                <!-- Student avatar -->
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
+                     style="width: 36px; height: 36px; font-size: 14px;">
+                    {{ student_name[0].upper() }}
+                </div>
+            </div>
+        </nav>
+
+        <!-- PAGE CONTENT -->
+        <div class="p-4">
+
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- ── SECTION 1: Stats Row ── -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm text-center p-3">
+                        <h2 class="fw-bold text-primary">8</h2>
+                        <small class="text-muted">Total Resources</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm text-center p-3">
+                        <h2 class="fw-bold text-success">3</h2>
+                        <small class="text-muted">Courses Enrolled</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm text-center p-3">
+                        <h2 class="fw-bold text-warning">55%</h2>
+                        <small class="text-muted">Avg. Completion</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── SECTION 2: Recommended Resources ── -->
+            <div class="mb-4">
+                <h5 class="fw-bold mb-3">⭐ Recommended Resources</h5>
+                <div class="row g-3">
+
+                    {% if recommended %}
+                        {% for resource in recommended %}
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+
+                                    <!-- Resource type badge -->
+                                    {% if resource['type'] == 'pdf' %}
+                                        <span class="badge bg-danger mb-2">PDF</span>
+                                    {% elif resource['type'] == 'video' %}
+                                        <span class="badge bg-primary mb-2">Video</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary mb-2">{{ resource['type'] }}</span>
+                                    {% endif %}
+
+                                    <!-- Difficulty badge -->
+                                    {% if resource['difficulty'] == 'Easy' %}
+                                        <span class="badge bg-success mb-2">Easy</span>
+                                    {% elif resource['difficulty'] == 'Medium' %}
+                                        <span class="badge bg-warning text-dark mb-2">Medium</span>
+                                    {% else %}
+                                        <span class="badge bg-danger mb-2">Hard</span>
+                                    {% endif %}
+
+                                    <h6 class="card-title fw-bold">{{ resource['title'] }}</h6>
+                                    <p class="card-text text-muted small">{{ resource['description'] }}</p>
+                                    <small class="text-muted">📚 {{ resource['course'] }}</small>
+                                    <br>
+                                    <small class="text-warning">⭐ {{ resource['rating'] }}</small>
+                                    <small class="text-muted ms-2">⬇️ {{ resource['downloads'] }}</small>
+
+                                </div>
+                                <div class="card-footer bg-transparent border-0 pb-3">
+                                    <a href="/download/{{ resource['resource_id'] }}" 
+                                       class="btn btn-outline-primary btn-sm w-100">
+                                        Download
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12">
+                            <p class="text-muted">No resources yet. 
+                                <a href="/upload">Upload the first one!</a>
+                            </p>
+                        </div>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            <!-- ── SECTION 3: Continue Learning ── -->
+            <div class="row g-3">
+
+                <div class="col-md-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3">📈 Continue Learning</h5>
+
+                            {% if progress %}
+                                {% for p in progress %}
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="fw-bold">{{ p['course'] }}</small>
+                                        <small class="text-muted">{{ p['completion_percentage']|int }}%</small>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar" 
+                                             role="progressbar"
+                                             style="width:  {{p['completion_percentage'] }}%"
+                                             aria-valuenow="{{ p['completion_percentage'] }}"
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No progress tracked yet.</p>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── SECTION 4: Recent Activity ── -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3">🕐 Recent Activity</h5>
+
+                            {% if activity %}
+                                {% for log in activity %}
+                                <div class="d-flex align-items-start mb-2">
+                                    <span class="me-2">•</span>
+                                    <div>
+                                        <small class="d-block">{{ log['action'] }}</small>
+                                        <small class="text-muted" style="font-size: 11px;">
+                                            {{ log['timestamp'] }}
+                                        </small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted small">No activity yet.</p>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- end row -->
+
+        </div>
+        <!-- end page content -->
+
+    </div>
+    <!-- end main content -->
+
 </div>
+<!-- end d-flex -->
+
 {% endblock %}

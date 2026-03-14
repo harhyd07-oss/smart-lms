@@ -20,4 +20,37 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* We'll add sidebar and dashboard styles in Step 2 */
+/* Sidebar nav link hover effect */
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: white !important;
+}
+
+/* Active sidebar link */
+.active-link {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: white !important;
+}
+
+/* Card hover lift effect */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Progress bar color */
+.progress-bar {
+    background-color: #3b82f6;
+}
+
+/* Navbar search input */
+.navbar input.form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}

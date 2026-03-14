@@ -184,3 +184,38 @@ def get_student_progress(student_id):
     progress = cursor.fetchall()
     conn.close()
     return progress
+def get_recommended_resources(limit=6):
+    """
+    Returns top resources sorted by rating.
+    This connects to our sorting algorithm in Day 2.
+    For now we use SQL ORDER BY — later we'll replace with Merge Sort.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT resource_id, title, description, type, course, difficulty, rating, downloads
+        FROM resources
+        ORDER BY rating DESC
+        LIMIT ?
+    ''', (limit,))
+    resources = cursor.fetchall()
+    conn.close()
+    return resources
+
+
+def get_all_resources():
+    """
+    Returns all resources from the database.
+    Used in the resource library page.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT resource_id, title, description, type, 
+               course, difficulty, rating, downloads
+        FROM resources
+        ORDER BY rating DESC
+    ''')
+    resources = cursor.fetchall()
+    conn.close()
+    return resources
