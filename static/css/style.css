@@ -1,0 +1,23 @@
+/* style.css — Our custom styles that sit on top of Bootstrap */
+
+/* Give the body a clean background */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Login card hover effect */
+.card {
+    border: none;
+    border-radius: 12px;
+}
+
+/* Make the login button feel premium */
+.btn-primary {
+    border-radius: 8px;
+    padding: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* We'll add sidebar and dashboard styles in Step 2 */

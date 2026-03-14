@@ -1,0 +1,21 @@
+# Virtual environment — never push this
+venv/
+
+# SQLite database — contains real data
+*.db
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# VS Code settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploaded files (keep folder, ignore contents)
+resources/pdfs/*
+resources/videos/*
