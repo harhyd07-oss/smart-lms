@@ -211,5 +211,103 @@ def download_resource(resource_id):
     # In a real app, this would serve the actual file
     flash(f"✅ '{resource['title']}' download started!", 'success')
     return redirect(url_for('library'))
+# ─── UPLOAD RESOURCE ──────────────────────────────────────────────────────────
+import os
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER   = 'resources'
+ALLOWED_EXTENSIONS = {'pdf', 'mp4', 'docx', 'pptx', 'txt'}
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload():
+    if 'student_id' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        title       = request.form['title']
+        description = request.form.get('description', '')
+        course      = request.form['course']
+        difficulty  = request.form['difficulty']
+        file        = request.files.get('file')
+
+        file_path = None
+
+        # ── OS CONCEPT: File Management ──
+        if file and file.filename and allowed_file(file.filename):
+            # secure_filename sanitizes the filename
+            # (removes path separators, special chars)
+            filename = secure_filename(file.filename)
+
+            # Determine subfolder based on file type
+            ext = filename.rsplit('.', 1)[1].lower()
+            if ext == 'mp4':
+                subfolder = os.path.join(UPLOAD_FOLDER, 'videos')
+            else:
+                subfolder = os.path.join(UPLOAD_FOLDER, 'pdfs')
+
+            # Create directory if it doesn't exist (OS file management)
+            os.makedirs(subfolder, exist_ok=True)
+
+            # Save file to filesystem
+            full_path = os.path.join(subfolder, filename)
+            file.save(full_path)
+            file_path = full_path
+
+        # Save resource metadata to database
+        from database.db import get_connection
+        conn   = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO resources
+            (title, description, type, course, difficulty, file_path, rating, downloads)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (title, description,
+              ext if file_path else 'other',
+              course, difficulty, file_path, 0, 0))
+        conn.commit()
+        conn.close()
+
+        # ── OS CONCEPT: Multithreading ──
+        # Log activity in a background thread
+        # Main thread doesn't wait for this
+        from os_concepts.threading_ops import process_upload_thread
+        process_upload_thread(session['student_id'], title)
+
+        flash(f"✅ '{title}' uploaded successfully!", 'success')
+        return redirect(url_for('library'))
+
+    return render_template('upload.html',
+                           student_name=session['student_name'])
+
+
+# ─── PROGRESS PAGE ────────────────────────────────────────────────────────────
+@app.route('/progress')
+def progress():
+    if 'student_id' not in session:
+        return redirect(url_for('login'))
+
+    from database.db import get_student_progress, get_recent_activity
+    from algorithms.dp import optimal_learning_path
+
+    student_id = session['student_id']
+    progress_data = get_student_progress(student_id)
+    activity      = get_recent_activity(student_id, limit=20)
+
+    # Convert to list of dicts for DP algorithm
+    progress_list = [dict(p) for p in progress_data]
+
+    # ── DAA CONCEPT: Dynamic Programming ──
+    learning_path = optimal_learning_path(progress_list)
+
+    return render_template('progress.html',
+                           student_name=session['student_name'],
+                           progress=progress_data,
+                           activity=activity,
+                           learning_path=learning_path)
 if __name__ == '__main__':
     app.run(debug=True)

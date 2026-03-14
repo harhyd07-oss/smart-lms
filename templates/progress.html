@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}My Progress — Smart LMS{% endblock %}
+
+{% block content %}
+<div class="d-flex" style="min-height: 100vh;">
+
+    <!-- Sidebar -->
+    <div class="sidebar d-flex flex-column p-3" style="width: 240px; min-height: 100vh; background-color: #1e293b;">
+        <div class="text-center mb-4 mt-2">
+            <h5 class="text-white fw-bold">📚 Smart LMS</h5>
+            <small class="text-secondary">Welcome, {{ student_name }}</small>
+        </div>
+        <hr class="text-secondary">
+        <nav class="nav flex-column gap-1">
+            <a href="/dashboard" class="nav-link text-secondary">🏠 Dashboard</a>
+            <a href="/library"   class="nav-link text-secondary">📖 Resource Library</a>
+            <a href="/upload"    class="nav-link text-secondary">⬆️ Upload Resource</a>
+            <a href="/progress"  class="nav-link text-white active-link">📊 My Progress</a>
+            <a href="/courses"   class="nav-link text-secondary">🎓 Courses</a>
+        </nav>
+        <div class="mt-auto">
+            <hr class="text-secondary">
+            <a href="/logout" class="nav-link text-danger">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="flex-grow-1 bg-light">
+
+        <nav class="navbar navbar-light bg-white border-bottom px-4 py-3">
+            <span class="navbar-brand mb-0 h5 fw-bold">My Progress</span>
+        </nav>
+
+        <div class="p-4">
+
+            <!-- DP Concept badge -->
+            <div class="alert alert-success border-0 mb-4">
+                <small>
+                    🧠 <strong>DAA Concept:</strong>
+                    Learning path is optimized using
+                    <strong>Dynamic Programming</strong>
+                    to suggest the most efficient course order.
+                </small>
+            </div>
+
+            <!-- Progress cards -->
+            <div class="row g-4 mb-4">
+                {% for p in progress %}
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm text-center p-3">
+
+                        <!-- Circular progress indicator -->
+                        <div class="position-relative d-inline-block mb-3"
+                             style="width: 100px; height: 100px; margin: 0 auto;">
+                            <svg viewBox="0 0 100 100" style="transform: rotate(-90deg);">
+                                <circle cx="50" cy="50" r="40"
+                                        fill="none" stroke="#e9ecef"
+                                        stroke-width="10"/>
+                                <circle cx="50" cy="50" r="40"
+                                        fill="none"
+                                        stroke="{% if p['completion_percentage'] >= 70 %}#22c55e{% elif p['completion_percentage'] >= 40 %}#3b82f6{% else %}#f59e0b{% endif %}"
+                                        stroke-width="10"
+                                        stroke-dasharray="{{ (p['completion_percentage'] / 100) * 251.2 }} 251.2"
+                                        stroke-linecap="round"/>
+                            </svg>
+                            <div class="position-absolute top-50 start-50 translate-middle fw-bold"
+                                 style="font-size: 16px;">
+                                {{ p['completion_percentage']|int }}%
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold">{{ p['course'] }}</h6>
+
+                        <!-- Status badge -->
+                        {% if p['completion_percentage'] >= 70 %}
+                            <span class="badge bg-success">On Track</span>
+                        {% elif p['completion_percentage'] >= 40 %}
+                            <span class="badge bg-primary">In Progress</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Just Started</span>
+                        {% endif %}
+
+                        <!-- Progress bar -->
+                        <div class="progress mt-3" style="height: 8px;">
+                            <div class="progress-bar
+                                {% if p['completion_percentage'] >= 70 %}bg-success
+                                {% elif p['completion_percentage'] >= 40 %}bg-primary
+                                {% else %}bg-warning{% endif %}"
+                                 style="width: {{ p['completion_percentage'] }}%">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- DP Learning Path Section -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-1">
+                        🗺️ Optimal Learning Path
+                    </h5>
+                    <small class="text-muted d-block mb-3">
+                        Generated by Dynamic Programming algorithm
+                    </small>
+
+                    {% if learning_path %}
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                            {% for i, step in learning_path %}
+                            <div class="d-flex align-items-center">
+                                <div class="card border-0 px-3 py-2
+                                    {% if loop.first %}bg-primary text-white
+                                    {% else %}bg-light{% endif %}">
+                                    <small class="fw-bold">{{ loop.index }}. {{ step }}</small>
+                                </div>
+                                {% if not loop.last %}
+                                    <span class="mx-2 text-muted">→</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            Start with the course where you have the least progress
+                            to maximize overall completion efficiently.
+                        </small>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            <!-- Full activity log -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">📋 Full Activity Log</h5>
+                    {% if activity %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Action</th>
+                                        <th>Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in activity %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ log['action'] }}</td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ log['timestamp'] | to_ist }}
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No activity recorded yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
