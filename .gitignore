@@ -19,3 +19,6 @@ Thumbs.db
 # Uploaded files (keep folder, ignore contents)
 resources/pdfs/*
 resources/videos/*
+
+# API keys
+.env
