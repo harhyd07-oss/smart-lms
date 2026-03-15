@@ -3,6 +3,35 @@
 // Runs in the browser after every page loads
 
 document.addEventListener('DOMContentLoaded', function () {
+   // ── THEME TOGGLE ──
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon   = document.getElementById('theme-icon');
+
+    // Load saved theme — update icon only (html class already
+    // applied in <head> before page painted — no flash)
+    const savedTheme = localStorage.getItem('lms-theme');
+    if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+        if (themeIcon) themeIcon.textContent = '🌙';
+    } else {
+        document.documentElement.classList.remove('dark-mode');
+        if (themeIcon) themeIcon.textContent = '☀️';
+    }
+
+    // Toggle on button click
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function () {
+            document.documentElement.classList.toggle('dark-mode');
+
+            if (document.documentElement.classList.contains('dark-mode')) {
+                localStorage.setItem('lms-theme', 'dark');
+                if (themeIcon) themeIcon.textContent = '🌙';
+            } else {
+                localStorage.setItem('lms-theme', 'light');
+                if (themeIcon) themeIcon.textContent = '☀️';
+            }
+        });
+    }
 
     // ── 1. Auto-dismiss alerts after 4 seconds ──
     // Flash messages disappear automatically
