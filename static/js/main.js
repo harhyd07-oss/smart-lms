@@ -3,6 +3,12 @@
 // Runs in the browser after every page loads
 
 document.addEventListener('DOMContentLoaded', function () {
+    // ── Restore scroll position after download redirect ──
+    const scrollPos = sessionStorage.getItem('scrollPos');
+    if (scrollPos) {
+        window.scrollTo(0, parseInt(scrollPos));
+        sessionStorage.removeItem('scrollPos');
+    }
    // ── THEME TOGGLE ──
     const themeToggle = document.getElementById('theme-toggle');
     const themeIcon   = document.getElementById('theme-icon');
@@ -175,3 +181,97 @@ document.addEventListener('DOMContentLoaded', function () {
 
     console.log('Smart LMS loaded ✅');
 });
+// ── Handle resource download without page jump ──
+function handleDownload(resourceId, btn) {
+    const originalText = btn.innerHTML;
+
+    btn.disabled  = true;
+    btn.innerHTML = '⏳ Downloading...';
+
+    fetch('/download/' + resourceId)
+        .then(response => {
+            if (response.ok) {
+                const contentType = response.headers.get('content-type');
+
+                if (contentType && contentType.includes('application/json')) {
+                    // No real file — do NOT update count
+                    return response.json().then(data => {
+                        if (data.no_file) {
+                            showToast('⚠️ ' + data.title + ' has no file attached.');
+                        }
+                    });
+                } else {
+                    // Real file exists — update count AND trigger download
+                    return response.blob().then(blob => {
+                        const disposition = response.headers.get('content-disposition');
+                        let filename = 'download';
+                        if (disposition) {
+                            const match = disposition.match(/filename="?([^"]+)"?/);
+                            if (match) filename = match[1];
+                        }
+
+                        // Trigger browser download
+                        const url  = window.URL.createObjectURL(blob);
+                        const a    = document.createElement('a');
+                        a.href     = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        a.remove();
+
+                        // Update ONLY the count span closest to the button
+                        // This fixes the double count issue
+                        const card    = btn.closest('.card');
+                        const countEl = card
+                            ? card.querySelector('[id^="downloads-"]')
+                            : document.getElementById('downloads-' + resourceId);
+
+                        if (countEl) {
+                            countEl.textContent = parseInt(countEl.textContent) + 1;
+                        }
+
+                        showToast('✅ Download started!');
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Download error:', error);
+            showToast('❌ Download failed. Please try again.');
+        })
+        .finally(() => {
+            btn.disabled  = false;
+            btn.innerHTML = originalText;
+        });
+}
+
+// ── Simple toast notification ──
+function showToast(message) {
+    const existing = document.getElementById('lms-toast');
+    if (existing) existing.remove();
+
+    const toast       = document.createElement('div');
+    toast.id          = 'lms-toast';
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #1e293b;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 9999;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: opacity 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}

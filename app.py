@@ -173,27 +173,46 @@ def download_resource(resource_id):
     if 'student_id' not in session:
         return redirect(url_for('login'))
 
+    from flask import send_file, jsonify
+    import os
     from database.db import get_connection
+
     conn   = get_connection()
     cursor = conn.cursor()
-
-    cursor.execute('''
-        UPDATE resources 
-        SET downloads = downloads + 1 
-        WHERE resource_id = ?
-    ''', (resource_id,))
-    conn.commit()
 
     cursor.execute(
         'SELECT * FROM resources WHERE resource_id = ?',
         (resource_id,)
     )
     resource = cursor.fetchone()
-    conn.close()
 
-    log_activity(session['student_id'], f"Downloaded: {resource['title']}")
-    flash(f"✅ '{resource['title']}' download started!", 'success')
-    return redirect(url_for('library'))
+    if not resource:
+        conn.close()
+        return jsonify({'error': 'Resource not found'}), 404
+
+    file_path = resource['file_path']
+
+    if file_path and os.path.exists(file_path):
+        # Only increment count if real file exists
+        cursor.execute('''
+            UPDATE resources
+            SET downloads = downloads + 1
+            WHERE resource_id = ?
+        ''', (resource_id,))
+        conn.commit()
+        conn.close()
+
+        log_activity(session['student_id'], f"Downloaded: {resource['title']}")
+
+        return send_file(
+            os.path.abspath(file_path),
+            as_attachment=True,
+            download_name=os.path.basename(file_path)
+        )
+    else:
+        # No file — don't increment, just notify
+        conn.close()
+        return jsonify({'no_file': True, 'title': resource['title']}), 200
 
 
 # ─── UPLOAD RESOURCE ──────────────────────────────────────────────────────────

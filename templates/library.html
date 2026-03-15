@@ -143,14 +143,14 @@
                                     <small class="text-muted">📚 {{ resource['course'] }}</small>
                                     <small class="text-warning">⭐ {{ resource['rating'] }}</small>
                                 </div>
-                                <small class="text-muted">⬇️ {{ resource['downloads'] }} downloads</small>
+                                <small class="text-muted">⬇️ <span id="downloads-{{ resource['resource_id'] }}">{{ resource['downloads'] }}</span> downloads</small>
 
                             </div>
                             <div class="card-footer bg-transparent border-0 pb-3">
-                                <a href="/download/{{ resource['resource_id'] }}"
-                               class="btn btn-outline-primary btn-sm w-100 mb-1">
-                                ⬇️ Download
-                            </a>
+                                <button onclick="handleDownload({{ resource['resource_id'] }}, this)"
+        class="btn btn-outline-primary btn-sm w-100 mb-1">
+    ⬇️ Download
+</button>
                             <a href="/similar/{{ resource['resource_id'] }}"
                                class="btn btn-outline-secondary btn-sm w-100">
                                 🔍 Find Similar

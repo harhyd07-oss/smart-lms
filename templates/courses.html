@@ -158,10 +158,10 @@
                                     <small class="text-warning">⭐ {{ resource['rating'] }}</small>
                                 </div>
                                 <div class="card-footer bg-transparent border-0 pb-3">
-                                    <a href="/download/{{ resource['resource_id'] }}"
-                                       class="btn btn-outline-primary btn-sm w-100 mb-1">
-                                        ⬇️ Download
-                                    </a>
+                                    <button onclick="handleDownload({{ resource['resource_id'] }}, this)"
+        class="btn btn-outline-primary btn-sm w-100 mb-1">
+    ⬇️ Download
+</button>
                                     <a href="/similar/{{ resource['resource_id'] }}"
                                        class="btn btn-outline-secondary btn-sm w-100">
                                         🔍 Find Similar
