@@ -2,7 +2,55 @@ import os
 import requests
 from google import genai
 from dotenv import load_dotenv
+import json
+# Educational keywords — if query contains any of these
+# it is considered a valid study-related search
+EDUCATIONAL_KEYWORDS = [
+    # Subjects
+    'algorithm', 'data structure', 'programming', 'coding', 'computer',
+    'science', 'math', 'mathematics', 'physics', 'chemistry', 'biology',
+    'history', 'geography', 'economics', 'english', 'language', 'literature',
+    'engineering', 'electronics', 'electrical', 'mechanical', 'civil',
+    'database', 'networking', 'operating system', 'software', 'hardware',
+    'machine learning', 'artificial intelligence', 'deep learning', 'neural',
+    'statistics', 'calculus', 'algebra', 'geometry', 'trigonometry',
+    'accounting', 'finance', 'management', 'marketing', 'business',
+    'psychology', 'sociology', 'philosophy', 'political', 'law',
+    'medical', 'anatomy', 'physiology', 'pharmacology', 'nursing',
+    'architecture', 'design', 'art', 'music theory',
 
+    # Programming languages and tools
+    'python', 'java', 'javascript', 'c++', 'c#', 'html', 'css', 'sql',
+    'react', 'angular', 'nodejs', 'flask', 'django', 'spring', 'kotlin',
+    'swift', 'rust', 'golang', 'typescript', 'php', 'ruby', 'scala',
+    'git', 'docker', 'kubernetes', 'aws', 'azure', 'linux', 'unix',
+
+    # Study-related terms
+    'tutorial', 'learn', 'study', 'course', 'lecture', 'lesson',
+    'explain', 'introduction', 'basics', 'beginner', 'advanced',
+    'concept', 'theory', 'formula', 'equation', 'proof', 'theorem',
+    'sort', 'search', 'tree', 'graph', 'array', 'linked list', 'stack',
+    'queue', 'hash', 'recursion', 'dynamic programming', 'greedy',
+    'binary', 'loop', 'function', 'class', 'object', 'variable',
+    'network', 'protocol', 'http', 'api', 'rest', 'web development',
+    'cybersecurity', 'encryption', 'compiler', 'interpreter',
+    'exam', 'test', 'quiz', 'assignment', 'homework', 'project',
+    'chapter', 'unit', 'module', 'semester', 'grade', 'degree',
+]
+
+def is_educational_query(query):
+    """
+    Checks if the search query is study or education related.
+    Returns True if educational, False if not.
+    """
+    query_lower = query.lower().strip()
+
+    # Check if query contains any educational keyword
+    for keyword in EDUCATIONAL_KEYWORDS:
+        if keyword in query_lower:
+            return True
+
+    return False
 load_dotenv()
 
 GEMINI_API_KEY          = os.getenv('GEMINI_API_KEY')
@@ -10,7 +58,6 @@ YOUTUBE_API_KEY         = os.getenv('YOUTUBE_API_KEY')
 GOOGLE_SEARCH_API_KEY   = os.getenv('GOOGLE_SEARCH_API_KEY')
 GOOGLE_SEARCH_ENGINE_ID = os.getenv('GOOGLE_SEARCH_ENGINE_ID')
 
-# Initialize Gemini client
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 
@@ -88,31 +135,45 @@ def search_youtube(query, num_results=5):
         return []
 
 
-def rate_resource_with_ai(resource, original_query):
-    if not GEMINI_API_KEY:
-        resource['ai_rating']  = 3.0
-        resource['ai_summary'] = 'AI rating unavailable.'
-        return resource
+def rate_all_resources_with_ai(resources, original_query):
+    """
+    Rates ALL resources in a SINGLE API call instead of
+    one call per resource. This uses 90% less quota.
+    """
+    if not GEMINI_API_KEY or not resources:
+        for r in resources:
+            r['ai_rating']  = 3.0
+            r['ai_summary'] = 'AI rating unavailable.'
+        return resources
+
+    # Build a single prompt with all resources
+    resources_text = ""
+    for i, r in enumerate(resources):
+        resources_text += f"""
+Resource {i+1}:
+- Title: {r['title']}
+- Source: {r['source']}
+- Type: {r['type']}
+- Description: {r['description'][:100]}
+"""
 
     prompt = f"""
-You are an educational resource evaluator. Rate this learning resource for the topic: "{original_query}"
+You are an educational resource evaluator. Rate these learning resources for the topic: "{original_query}"
 
-Resource details:
-- Title: {resource['title']}
-- URL: {resource['url']}
-- Description: {resource['description']}
-- Source: {resource['source']}
-- Type: {resource['type']}
+{resources_text}
 
-Rate this resource from 1 to 5 based on:
-1. Relevance to the topic "{original_query}"
-2. Educational value and content quality
-3. Source credibility (YouTube, Wikipedia, GeeksForGeeks, official docs = high credibility)
-4. Clarity of the title and description
+Rate each resource from 1.0 to 5.0 based on:
+1. Relevance to "{original_query}"
+2. Educational value
+3. Source credibility (YouTube, Wikipedia, GeeksForGeeks = high credibility)
 
-Respond in this EXACT format and nothing else:
-RATING: [number between 1.0 and 5.0]
-SUMMARY: [one sentence explaining why this rating]
+Respond ONLY with a JSON array in this exact format:
+[
+  {{"index": 1, "rating": 4.5, "summary": "one sentence reason"}},
+  {{"index": 2, "rating": 3.2, "summary": "one sentence reason"}},
+  ...
+]
+No other text, just the JSON array.
 """
 
     try:
@@ -122,48 +183,52 @@ SUMMARY: [one sentence explaining why this rating]
         )
         text = response.text.strip()
 
-        rating  = 3.0
-        summary = 'Good resource.'
+        # Clean up response in case Gemini adds markdown
+        text = text.replace('```json', '').replace('```', '').strip()
 
-        for line in text.split('\n'):
-            if line.startswith('RATING:'):
-                try:
-                    rating = float(line.replace('RATING:', '').strip())
-                    rating = max(1.0, min(5.0, rating))
-                except:
-                    rating = 3.0
-            elif line.startswith('SUMMARY:'):
-                summary = line.replace('SUMMARY:', '').strip()
+        ratings = json.loads(text)
 
-        resource['ai_rating']  = round(rating, 1)
-        resource['ai_summary'] = summary
-        return resource
+        for rating_obj in ratings:
+            idx = rating_obj.get('index', 1) - 1
+            if 0 <= idx < len(resources):
+                resources[idx]['ai_rating']  = round(
+                    max(1.0, min(5.0, float(rating_obj.get('rating', 3.0)))), 1
+                )
+                resources[idx]['ai_summary'] = rating_obj.get('summary', 'Good resource.')
+
+        return resources
 
     except Exception as e:
-        print(f"Gemini rating error: {e}")
-        resource['ai_rating']  = 3.0
-        resource['ai_summary'] = 'Could not rate this resource.'
-        return resource
+        print(f"Gemini batch rating error: {e}")
+        for r in resources:
+            r['ai_rating']  = 3.0
+            r['ai_summary'] = 'Could not rate this resource.'
+        return resources
 
 
 def search_and_rate(query, min_rating=4.0):
+    # ── Validate query is educational ──
+    if not is_educational_query(query):
+        print(f"Non-educational query blocked: {query}")
+        return None  # None signals invalid query
+
     print(f"Searching for: {query}")
 
     google_results  = search_google(query,  num_results=5)
     youtube_results = search_youtube(query, num_results=5)
 
     all_results = google_results + youtube_results
-    print(f"Found {len(all_results)} results, rating with AI...")
+    print(f"Found {len(all_results)} results, rating all with ONE AI call...")
 
-    rated_results = []
-    for resource in all_results:
-        rated = rate_resource_with_ai(resource, query)
-        rated_results.append(rated)
+    rated_results = rate_all_resources_with_ai(all_results, query)
 
     high_quality = [
         r for r in rated_results
         if r.get('ai_rating', 0) >= min_rating
     ]
+
+    if not high_quality:
+        high_quality = rated_results
 
     high_quality.sort(key=lambda x: x.get('ai_rating', 0), reverse=True)
 

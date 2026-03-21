@@ -77,7 +77,7 @@ def register():
 
 
 # ─── DASHBOARD ────────────────────────────────────────────────────────────────
-@app.route('/dashboard')
+@app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
     if 'student_id' not in session:
         flash('Please log in first.', 'warning')
@@ -85,16 +85,40 @@ def dashboard():
 
     student_id = session['student_id']
 
-    from database.db import get_recommended_resources, get_recent_activity, get_student_progress
-    recommended = get_recommended_resources(limit=3)
-    activity    = get_recent_activity(student_id, limit=5)
-    progress    = get_student_progress(student_id)
+    from database.db import get_recent_activity, get_student_progress
+    activity = get_recent_activity(student_id, limit=5)
+    progress = get_student_progress(student_id)
+
+    # AI Search from dashboard search bar
+    search_results = []
+    search_query   = ''
+    search_error   = None
+
+    if request.method == 'POST':
+        search_query = request.form.get('search', '').strip()
+        if search_query:
+            try:
+                from algorithms.ai_search import search_and_rate
+                search_results = search_and_rate(search_query, min_rating=4.0)
+
+                if search_results is None:
+                    search_error = "⚠️ Please search for educational topics only — e.g. algorithms, programming, mathematics, science."
+                    search_results = []
+                else:
+                    log_activity(student_id, f"Searched: {search_query}")
+                    if not search_results:
+                        search_error = "No resources found. Try a different search term."
+            except Exception as e:
+                search_error  = f"Search error: {str(e)}"
+                print(f"AI Search error: {e}")
 
     return render_template('dashboard.html',
                            student_name=session['student_name'],
-                           recommended=recommended,
                            activity=activity,
-                           progress=progress)
+                           progress=progress,
+                           search_results=search_results,
+                           search_query=search_query,
+                           search_error=search_error)
 
 
 # ─── LOGOUT ───────────────────────────────────────────────────────────────────
