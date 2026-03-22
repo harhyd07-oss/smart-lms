@@ -7,35 +7,46 @@ import json
 # it is considered a valid study-related search
 EDUCATIONAL_KEYWORDS = [
     # Subjects
-    'algorithm', 'data structure', 'programming', 'coding', 'computer',
-    'science', 'math', 'mathematics', 'physics', 'chemistry', 'biology',
-    'history', 'geography', 'economics', 'english', 'language', 'literature',
-    'engineering', 'electronics', 'electrical', 'mechanical', 'civil',
-    'database', 'networking', 'operating system', 'software', 'hardware',
-    'machine learning', 'artificial intelligence', 'deep learning', 'neural',
+    'algorithm', 'data structure', 'programming', 'coding', 'computer science',
+    'mathematics', 'physics', 'chemistry', 'biology', 'history',
+    'geography', 'economics', 'literature', 'engineering', 'electronics',
+    'electrical', 'mechanical', 'civil engineering', 'database', 'networking',
+    'operating system', 'software', 'hardware', 'machine learning',
+    'artificial intelligence', 'deep learning', 'neural network',
     'statistics', 'calculus', 'algebra', 'geometry', 'trigonometry',
     'accounting', 'finance', 'management', 'marketing', 'business',
-    'psychology', 'sociology', 'philosophy', 'political', 'law',
+    'psychology', 'sociology', 'philosophy', 'political science',
     'medical', 'anatomy', 'physiology', 'pharmacology', 'nursing',
-    'architecture', 'design', 'art', 'music theory',
+    'architecture', 'music theory', 'art history', 'art theory',
+    'data science', 'cyber security', 'cloud computing',
 
-    # Programming languages and tools
-    'python', 'java', 'javascript', 'c++', 'c#', 'html', 'css', 'sql',
-    'react', 'angular', 'nodejs', 'flask', 'django', 'spring', 'kotlin',
-    'swift', 'rust', 'golang', 'typescript', 'php', 'ruby', 'scala',
-    'git', 'docker', 'kubernetes', 'aws', 'azure', 'linux', 'unix',
+    # Programming languages
+    'python', 'javascript', 'typescript', 'kotlin', 'golang',
+    'java programming', 'c programming', 'c++ programming',
+    'html css', 'sql tutorial', 'react tutorial', 'angular',
+    'nodejs', 'flask tutorial', 'django', 'spring boot',
+    'swift programming', 'rust programming', 'scala',
+    'git tutorial', 'docker tutorial', 'kubernetes',
+    'aws tutorial', 'azure tutorial', 'linux tutorial',
 
-    # Study-related terms
-    'tutorial', 'learn', 'study', 'course', 'lecture', 'lesson',
-    'explain', 'introduction', 'basics', 'beginner', 'advanced',
-    'concept', 'theory', 'formula', 'equation', 'proof', 'theorem',
-    'sort', 'search', 'tree', 'graph', 'array', 'linked list', 'stack',
-    'queue', 'hash', 'recursion', 'dynamic programming', 'greedy',
-    'binary', 'loop', 'function', 'class', 'object', 'variable',
-    'network', 'protocol', 'http', 'api', 'rest', 'web development',
-    'cybersecurity', 'encryption', 'compiler', 'interpreter',
-    'exam', 'test', 'quiz', 'assignment', 'homework', 'project',
-    'chapter', 'unit', 'module', 'semester', 'grade', 'degree',
+    # CS concepts
+    'merge sort', 'quick sort', 'bubble sort', 'insertion sort',
+    'binary search', 'linear search', 'binary tree', 'linked list',
+    'dynamic programming', 'greedy algorithm', 'graph theory',
+    'hash table', 'recursion', 'stack data', 'queue data',
+    'time complexity', 'space complexity', 'big o notation',
+    'design pattern', 'system design', 'object oriented',
+    'functional programming', 'data structures',
+
+    # Study terms
+    'tutorial', 'lecture', 'course', 'lesson', 'introduction to',
+    'basics of', 'beginner guide', 'advanced guide', 'how to learn',
+    'exam preparation', 'study guide', 'homework help',
+    'assignment help', 'project tutorial', 'learn programming',
+    'learn python', 'learn java', 'learn sql', 'learn web',
+    'web development', 'app development', 'game development',
+    'compiler design', 'computer network', 'database management',
+    'software engineering', 'information technology',
 ]
 
 def is_educational_query(query):
@@ -43,18 +54,18 @@ def is_educational_query(query):
     Checks if query is education related using
     whole word matching to avoid false positives.
     e.g. 'start' should not match 'art'
+    e.g. 'classic' should not match 'class'
     """
     import re
     query_lower = query.lower().strip()
 
     for keyword in EDUCATIONAL_KEYWORDS:
-        # Use word boundary matching for single words
-        # For phrases (containing space), use simple substring match
         if ' ' in keyword:
+            # Multi-word phrase — use substring match
             if keyword in query_lower:
                 return True
         else:
-            # Match whole word only
+            # Single word — match whole word only using boundaries
             pattern = r'\b' + re.escape(keyword) + r'\b'
             if re.search(pattern, query_lower):
                 return True
