@@ -40,15 +40,24 @@ EDUCATIONAL_KEYWORDS = [
 
 def is_educational_query(query):
     """
-    Checks if the search query is study or education related.
-    Returns True if educational, False if not.
+    Checks if query is education related using
+    whole word matching to avoid false positives.
+    e.g. 'start' should not match 'art'
     """
+    import re
     query_lower = query.lower().strip()
 
-    # Check if query contains any educational keyword
     for keyword in EDUCATIONAL_KEYWORDS:
-        if keyword in query_lower:
-            return True
+        # Use word boundary matching for single words
+        # For phrases (containing space), use simple substring match
+        if ' ' in keyword:
+            if keyword in query_lower:
+                return True
+        else:
+            # Match whole word only
+            pattern = r'\b' + re.escape(keyword) + r'\b'
+            if re.search(pattern, query_lower):
+                return True
 
     return False
 load_dotenv()
