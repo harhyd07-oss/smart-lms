@@ -3,7 +3,15 @@
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
+/* ── Smooth theme transition ── */
+*,
+*::before,
+*::after {
+    transition: background-color 0.15s ease,
+                color 0.15s ease,
+                border-color 0.15s ease,
+                box-shadow 0.15s ease !important;
+}
 * {
     margin: 0;
     padding: 0;
@@ -545,4 +553,66 @@ html.dark-mode .shadow-sm       { box-shadow: 0 2px 10px rgba(0,0,0,0.4) !import
 
 html.dark-mode .rounded-circle.bg-primary {
     background: #6366f1 !important;
+}
+/* ── Fix sharp corners in dark mode ── */
+html.dark-mode .card,
+html.dark-mode .card-header,
+html.dark-mode .card-body,
+html.dark-mode .card-footer {
+    border-radius: 14px !important;
+}
+
+html.dark-mode .card-header {
+    border-radius: 14px 14px 0 0 !important;
+}
+
+html.dark-mode .card-footer {
+    border-radius: 0 0 14px 14px !important;
+}
+
+html.dark-mode .sidebar {
+    border-radius: 0 !important;
+}
+
+html.dark-mode .navbar {
+    border-radius: 0 !important;
+}
+
+html.dark-mode .progress {
+    border-radius: 20px !important;
+}
+
+html.dark-mode .badge {
+    border-radius: 20px !important;
+}
+
+html.dark-mode .btn {
+    border-radius: 8px !important;
+}
+
+html.dark-mode .form-control,
+html.dark-mode .form-select {
+    border-radius: 9px !important;
+}
+
+html.dark-mode .alert {
+    border-radius: 10px !important;
+}
+/* ── Fix placeholder text visibility in dark mode ── */
+html.dark-mode input::placeholder,
+html.dark-mode textarea::placeholder,
+html.dark-mode .form-control::placeholder,
+html.dark-mode .form-select::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+}
+
+/* Fix typed text visibility in dark mode */
+html.dark-mode input,
+html.dark-mode textarea,
+html.dark-mode select,
+html.dark-mode .form-control,
+html.dark-mode .form-select {
+    color: #e2e8f0 !important;
+    caret-color: #a5b4fc !important;
 }
