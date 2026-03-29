@@ -235,7 +235,7 @@ def search_and_rate(query, min_rating=4.0):
     print(f"Searching for: {query}")
 
     google_results  = search_google(query,  num_results=5)
-    youtube_results = search_youtube(query, num_results=5)
+    youtube_results = search_youtube(query, num_results=4)
 
     all_results = google_results + youtube_results
     print(f"Found {len(all_results)} results, rating all with ONE AI call...")
@@ -251,6 +251,9 @@ def search_and_rate(query, min_rating=4.0):
         high_quality = rated_results
 
     high_quality.sort(key=lambda x: x.get('ai_rating', 0), reverse=True)
+
+    # Cap results at 9 maximum
+    high_quality = high_quality[:9]
 
     print(f"Returning {len(high_quality)} high quality resources")
     return high_quality

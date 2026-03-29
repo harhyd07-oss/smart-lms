@@ -5,7 +5,7 @@
 
 import sqlite3
 import os
-
+import bcrypt
 # This finds the path to our database file automatically,
 # no matter where the project is on your computer.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -99,19 +99,22 @@ def init_db():
 def add_student(name, email, password):
     """
     Inserts a new student into the database.
+    Password is hashed with bcrypt before storing.
     Returns True if successful, False if email already exists.
     """
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        # Hash the password before saving — never store plain text
+        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
         cursor.execute(
             'INSERT INTO students (name, email, password) VALUES (?, ?, ?)',
-            (name, email, password)
+            (name, email, hashed)
         )
         conn.commit()
         return True
     except sqlite3.IntegrityError:
-        # This fires when email already exists (UNIQUE constraint)
         return False
     finally:
         conn.close()
@@ -257,3 +260,40 @@ def get_resources_by_course(course):
     resources = cursor.fetchall()
     conn.close()
     return resources
+def update_progress(student_id, course, increment=10):
+    """
+    Increases a student's completion percentage for a course.
+    If no progress row exists yet, creates one starting at increment%.
+    Caps at 100% maximum.
+    Called every time a student downloads or uploads a resource.
+    """
+    conn   = get_connection()
+    cursor = conn.cursor()
+
+    # Check if a progress row already exists for this student + course
+    cursor.execute('''
+        SELECT progress_id, completion_percentage
+        FROM progress
+        WHERE student_id = ? AND course = ?
+    ''', (student_id, course))
+
+    existing = cursor.fetchone()
+
+    if existing:
+        # Row exists — increase by increment, cap at 100
+        new_pct = min(100, existing['completion_percentage'] + increment)
+        cursor.execute('''
+            UPDATE progress
+            SET completion_percentage = ?,
+                last_updated = CURRENT_TIMESTAMP
+            WHERE progress_id = ?
+        ''', (new_pct, existing['progress_id']))
+    else:
+        # No row yet — create a fresh one
+        cursor.execute('''
+            INSERT INTO progress (student_id, course, completion_percentage)
+            VALUES (?, ?, ?)
+        ''', (student_id, course, min(100, increment)))
+
+    conn.commit()
+    conn.close()

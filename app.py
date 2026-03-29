@@ -1,4 +1,5 @@
 # app.py
+import bcrypt 
 from datetime import datetime, timezone, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from database.db import init_db, get_student_by_email, add_student, log_activity
@@ -47,7 +48,7 @@ def login():
         password = request.form['password']
         student  = get_student_by_email(email)
 
-        if student and student['password'] == password:
+        if student and bcrypt.checkpw(password.encode('utf-8'), student['password']):
             session['student_id']   = student['student_id']
             session['student_name'] = student['name']
             log_activity(student['student_id'], 'Logged in')
@@ -227,7 +228,9 @@ def download_resource(resource_id):
         conn.close()
 
         log_activity(session['student_id'], f"Downloaded: {resource['title']}")
-
+        # ── NEW: update progress for this course ──
+        from database.db import update_progress
+        update_progress(session['student_id'], resource['course'], increment=10)  
         return send_file(
             os.path.abspath(file_path),
             as_attachment=True,
@@ -292,7 +295,9 @@ def upload():
         ]
         scheduled = round_robin_scheduling(background_tasks, quantum=2)
         process_upload_thread(session['student_id'], title)
-
+         # ── NEW: update progress for the uploaded course ──
+        from database.db import update_progress
+        update_progress(session['student_id'], course, increment=15)
         flash(f"✅ '{title}' uploaded successfully!", 'success')
         return redirect(url_for('library'))
 
