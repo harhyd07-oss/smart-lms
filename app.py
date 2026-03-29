@@ -200,7 +200,7 @@ def download_resource(resource_id):
 
     from flask import send_file, jsonify
     import os
-    from database.db import get_connection
+    from database.db import get_connection, update_progress
 
     conn   = get_connection()
     cursor = conn.cursor()
@@ -228,9 +228,10 @@ def download_resource(resource_id):
         conn.close()
 
         log_activity(session['student_id'], f"Downloaded: {resource['title']}")
-        # ── NEW: update progress for this course ──
-        from database.db import update_progress
-        update_progress(session['student_id'], resource['course'], increment=10)  
+
+        # Update progress for this course — downloading counts as engagement
+        update_progress(session['student_id'], resource['course'], increment=10)
+
         return send_file(
             os.path.abspath(file_path),
             as_attachment=True,
@@ -261,9 +262,20 @@ def upload():
         description = request.form.get('description', '')
         course      = request.form['course']
         difficulty  = request.form['difficulty']
-        file        = request.files.get('file')
-        file_path   = None
-        ext         = 'other'
+
+        # ── Handle custom subject ──
+        # If student chose "Other", validate and use their typed subject
+        if course == '__custom__':
+            custom = request.form.get('custom_course', '').strip()
+            from algorithms.ai_search import is_educational_query
+            if not custom or not is_educational_query(custom):
+                flash('⚠️ Please enter a valid study-related subject name.', 'danger')
+                return redirect(url_for('upload'))
+            course = custom.title()  # capitalises first letter of each word e.g. "data science" → "Data Science"
+
+        file      = request.files.get('file')
+        file_path = None
+        ext       = 'other'
 
         if file and file.filename and allowed_file(file.filename):
             filename  = secure_filename(file.filename)
@@ -274,7 +286,7 @@ def upload():
             file.save(full_path)
             file_path = full_path
 
-        from database.db import get_connection
+        from database.db import get_connection, update_progress
         conn   = get_connection()
         cursor = conn.cursor()
         cursor.execute('''
@@ -295,9 +307,10 @@ def upload():
         ]
         scheduled = round_robin_scheduling(background_tasks, quantum=2)
         process_upload_thread(session['student_id'], title)
-         # ── NEW: update progress for the uploaded course ──
-        from database.db import update_progress
+
+        # Update progress for the uploaded course — uploading = strong engagement
         update_progress(session['student_id'], course, increment=15)
+
         flash(f"✅ '{title}' uploaded successfully!", 'success')
         return redirect(url_for('library'))
 
@@ -386,7 +399,10 @@ def courses():
                            selected_course=selected_course,
                            course_resources=course_resources)
 
-# ─── AI RESOURCE SEARCH ───────────────────────────────────────────────────────
+
+# ─── AI RESOURCE SEARCH (legacy — kept for fallback) ─────────────────────────
+# NOTE: This route will be removed in the next cleanup step.
+# The dashboard search bar has replaced this page entirely.
 @app.route('/ai-search', methods=['GET', 'POST'])
 def ai_search():
     if 'student_id' not in session:
@@ -418,5 +434,7 @@ def ai_search():
                            results=results,
                            query=query,
                            error=error)
+
+
 if __name__ == '__main__':
     app.run(debug=True)

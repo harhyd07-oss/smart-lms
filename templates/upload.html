@@ -75,14 +75,76 @@
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Subject</label>
-                                <select class="form-select" name="course" required>
-                                    <option value="">Select subject</option>
-                                    <option value="DAA">DAA</option>
-                                    <option value="Operating Systems">Operating Systems</option>
-                                    <option value="DBMS">DBMS</option>
-                                </select>
-                            </div>
+    <label class="form-label fw-bold">Subject</label>
+    <select class="form-select" name="course" id="subject-select" required>
+        <option value="">Select subject</option>
+
+        <optgroup label="── Core Computer Science ──">
+            <option value="DAA">DAA (Design & Analysis of Algorithms)</option>
+            <option value="Operating Systems">Operating Systems</option>
+            <option value="DBMS">DBMS (Database Management)</option>
+            <option value="Computer Networks">Computer Networks</option>
+            <option value="Theory of Computation">Theory of Computation</option>
+            <option value="Computer Organization">Computer Organization & Architecture</option>
+            <option value="Software Engineering">Software Engineering</option>
+            <option value="Compiler Design">Compiler Design</option>
+            <option value="Cyber Security">Cyber Security</option>
+            <option value="Cloud Computing">Cloud Computing</option>
+            <option value="Artificial Intelligence">Artificial Intelligence</option>
+            <option value="Machine Learning">Machine Learning</option>
+            <option value="Data Science">Data Science</option>
+        </optgroup>
+
+        <optgroup label="── Programming Languages ──">
+            <option value="Python">Python</option>
+            <option value="Java">Java</option>
+            <option value="C Programming">C Programming</option>
+            <option value="C++">C++</option>
+            <option value="JavaScript">JavaScript</option>
+            <option value="Web Development">Web Development (HTML/CSS/JS)</option>
+            <option value="React">React</option>
+            <option value="SQL">SQL</option>
+        </optgroup>
+
+        <optgroup label="── Mathematics ──">
+            <option value="Engineering Mathematics">Engineering Mathematics</option>
+            <option value="Discrete Mathematics">Discrete Mathematics</option>
+            <option value="Linear Algebra">Linear Algebra</option>
+            <option value="Probability and Statistics">Probability & Statistics</option>
+            <option value="Calculus">Calculus</option>
+        </optgroup>
+
+        <optgroup label="── Science ──">
+            <option value="Physics">Physics</option>
+            <option value="Chemistry">Chemistry</option>
+            <option value="Biology">Biology</option>
+        </optgroup>
+
+        <optgroup label="── Engineering Branches ──">
+            <option value="Electronics">Electronics (ECE)</option>
+            <option value="Electrical Engineering">Electrical Engineering</option>
+            <option value="Mechanical Engineering">Mechanical Engineering</option>
+            <option value="Civil Engineering">Civil Engineering</option>
+        </optgroup>
+
+        <optgroup label="── Other ──">
+            <option value="__custom__">✏️ Other (type your own)</option>
+        </optgroup>
+    </select>
+
+    <!-- Hidden custom input — shown only when Other is selected -->
+    <input type="text"
+           class="form-control mt-2"
+           id="custom-subject"
+           name="custom_course"
+           placeholder="e.g. Thermodynamics, Robotics..."
+           style="display: none;">
+    <small id="custom-hint"
+           class="text-muted mt-1"
+           style="display: none;">
+        Enter a study-related subject name only.
+    </small>
+</div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Difficulty</label>
                                 <select class="form-select" name="difficulty" required>
@@ -116,4 +178,21 @@
         </div>
     </div>
 </div>
+<script>
+document.getElementById('subject-select').addEventListener('change', function() {
+    const custom = document.getElementById('custom-subject');
+    const hint   = document.getElementById('custom-hint');
+
+    if (this.value === '__custom__') {
+        custom.style.display = 'block';
+        custom.required      = true;
+        hint.style.display   = 'block';
+    } else {
+        custom.style.display = 'none';
+        custom.required      = false;
+        hint.style.display   = 'none';
+        custom.value         = '';
+    }
+});
+</script>
 {% endblock %}
