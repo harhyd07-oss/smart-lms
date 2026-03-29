@@ -400,40 +400,6 @@ def courses():
                            course_resources=course_resources)
 
 
-# ─── AI RESOURCE SEARCH (legacy — kept for fallback) ─────────────────────────
-# NOTE: This route will be removed in the next cleanup step.
-# The dashboard search bar has replaced this page entirely.
-@app.route('/ai-search', methods=['GET', 'POST'])
-def ai_search():
-    if 'student_id' not in session:
-        return redirect(url_for('login'))
-
-    results = []
-    query   = ''
-    error   = None
-
-    if request.method == 'POST':
-        query = request.form.get('query', '').strip()
-
-        if query:
-            try:
-                from algorithms.ai_search import search_and_rate
-                results = search_and_rate(query, min_rating=4.0)
-                log_activity(session['student_id'],
-                             f"AI searched: {query}")
-
-                if not results:
-                    error = "No high quality resources found. Try a different search term."
-
-            except Exception as e:
-                error = f"Search error: {str(e)}"
-                print(f"AI Search error: {e}")
-
-    return render_template('ai_search.html',
-                           student_name=session['student_name'],
-                           results=results,
-                           query=query,
-                           error=error)
 
 
 if __name__ == '__main__':
