@@ -51,26 +51,48 @@ EDUCATIONAL_KEYWORDS = [
 
 def is_educational_query(query):
     """
-    Checks if query is education related using
-    whole word matching to avoid false positives.
-    e.g. 'start' should not match 'art'
-    e.g. 'classic' should not match 'class'
+    Two-stage educational filter:
+    Stage 1 — Fast keyword check (no API call, instant)
+    Stage 2 — Gemini fallback (only if keywords don't match)
+    This saves quota while being smarter than keywords alone.
     """
     import re
     query_lower = query.lower().strip()
 
+    # ── Stage 1: Keyword check ──
     for keyword in EDUCATIONAL_KEYWORDS:
         if ' ' in keyword:
-            # Multi-word phrase — use substring match
             if keyword in query_lower:
                 return True
         else:
-            # Single word — match whole word only using boundaries
             pattern = r'\b' + re.escape(keyword) + r'\b'
             if re.search(pattern, query_lower):
                 return True
 
-    return False
+    # ── Stage 2: Gemini fallback ──
+    # Only reached if no keyword matched
+    # Ask Gemini with a very short prompt to save tokens
+    try:
+        if not GEMINI_API_KEY:
+            return False
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=(
+                f'Is this search query related to education, studying, or learning? '
+                f'Query: "{query}". '
+                f'Reply with only YES or NO.'
+            )
+        )
+        answer = response.text.strip().upper()
+        print(f"Gemini educational check for '{query}': {answer}")
+        return answer.startswith('YES')
+
+    except Exception as e:
+        # If Gemini fails (quota etc.), fall back to blocking the query
+        # Better to be safe than allow non-educational content
+        print(f"Gemini educational check failed: {e}")
+        return False
 load_dotenv()
 
 GEMINI_API_KEY          = os.getenv('GEMINI_API_KEY')
