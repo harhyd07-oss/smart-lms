@@ -65,21 +65,25 @@
                             <div class="col-md-3">
                                 <label class="form-label small fw-bold">Subject</label>
                                 <select class="form-select" name="course">
-                                    <option value="">All Subjects</option>
-                                    <option value="DAA"                {{ 'selected' if course == 'DAA' }}>DAA</option>
-                                    <option value="Operating Systems"  {{ 'selected' if course == 'Operating Systems' }}>Operating Systems</option>
-                                    <option value="DBMS"               {{ 'selected' if course == 'DBMS' }}>DBMS</option>
-                                </select>
+    <option value="">All Subjects</option>
+    {% for c in courses %}
+        <option value="{{ c }}" {{ 'selected' if course == c }}>
+            {{ c }}
+        </option>
+    {% endfor %}
+</select>
                             </div>
 
                             <div class="col-md-3">
                                 <label class="form-label small fw-bold">Difficulty</label>
                                 <select class="form-select" name="difficulty">
-                                    <option value="">All Levels</option>
-                                    <option value="Easy"   {{ 'selected' if difficulty == 'Easy' }}>Easy</option>
-                                    <option value="Medium" {{ 'selected' if difficulty == 'Medium' }}>Medium</option>
-                                    <option value="Hard"   {{ 'selected' if difficulty == 'Hard' }}>Hard</option>
-                                </select>
+    <option value="">All Levels</option>
+    {% for d in difficulties %}
+        <option value="{{ d }}" {{ 'selected' if difficulty == d }}>
+            {{ d }}
+        </option>
+    {% endfor %}
+</select>
                             </div>
 
                             <div class="col-md-2">

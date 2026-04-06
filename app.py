@@ -10,7 +10,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-app.secret_key = 'lms_secret_key_2024'
+app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key")
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
@@ -170,11 +170,13 @@ def library():
                 r for r in resources_list
                 if search.lower() in r['title'].lower()
             ]
+
         if course:
             resources_list = [
                 r for r in resources_list
                 if r['course'] == course
             ]
+
         if difficulty:
             resources_list = [
                 r for r in resources_list
@@ -183,14 +185,19 @@ def library():
 
         resources_list = merge_sort(resources_list, key='rating', reverse=True)
 
+    # ✅ NEW: Dynamic dropdown data (FIXED HARD CODING)
+    courses = sorted(set([r['course'] for r in all_resources]))
+    difficulties = sorted(set([r['difficulty'] for r in all_resources]))
+
     return render_template('library.html',
                            resources=resources_list,
                            student_name=session['student_name'],
                            search=request.args.get('search', ''),
                            course=request.args.get('course', ''),
                            difficulty=request.args.get('difficulty', ''),
-                           similar_title=similar_title)
-
+                           similar_title=similar_title,
+                           courses=courses,
+                           difficulties=difficulties)
 
 # ─── DOWNLOAD RESOURCE ────────────────────────────────────────────────────────
 @app.route('/download/<int:resource_id>')
@@ -403,4 +410,4 @@ def courses():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)

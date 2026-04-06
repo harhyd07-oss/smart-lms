@@ -1,9 +1,6 @@
 # Virtual environment — never push this
 venv/
 
-# SQLite database — contains real data
-*.db
-
 # Python cache files
 __pycache__/
 *.pyc
@@ -19,6 +16,10 @@ Thumbs.db
 # Uploaded files (keep folder, ignore contents)
 resources/pdfs/*
 resources/videos/*
+
+# Keep folders tracked
+!resources/pdfs/.gitkeep
+!resources/videos/.gitkeep
 
 # API keys
 .env
