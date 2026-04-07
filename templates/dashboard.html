@@ -31,7 +31,7 @@
     <div class="flex-grow-1 bg-light">
 
         <!-- Navbar -->
-        <nav class="navbar navbar-light bg-white border-bottom px-4 py-3">
+        <nav class="navbar navbar-light bg-white border-bottom px-3 px-md-4 py-3">
             <span class="navbar-brand mb-0 h5 fw-bold">Dashboard</span>
             <div class="d-flex align-items-center gap-3">
                 <button id="theme-toggle"
@@ -47,7 +47,7 @@
             </div>
         </nav>
 
-        <div class="p-4">
+        <div class="p-3 p-md-4">
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -72,7 +72,25 @@
                         PDFs, courses. AI rates and filters the best ones for you.
                     </p>
                     <form method="POST" action="/dashboard" id="search-form">
-                        <div class="d-flex gap-3">
+                        <div class="row g-2">
+    <div class="col-12 col-md-9">
+        <input
+            type="text"
+            class="form-control"
+            name="search"
+            id="dashboard-search"
+            placeholder="e.g. Merge Sort, Python basics..."
+            value="{{ search_query }}"
+        >
+    </div>
+    <div class="col-12 col-md-3">
+        <button type="submit"
+                class="btn btn-primary w-100"
+                id="search-btn">
+            🔍 Search
+        </button>
+    </div>
+</div>
                             <input
                                 type="text"
                                 class="form-control"
@@ -141,7 +159,7 @@
 
             <div class="row g-3 mb-4">
                 {% for resource in search_results %}
-                <div class="col-md-4">
+                <div class="col-12 col-sm-6 col-md-4">
                     <div class="card border-0 shadow-sm h-100">
 
                         {% if resource.thumbnail %}
@@ -222,7 +240,7 @@
             <div class="row g-3">
 
                 <!-- Progress -->
-                <div class="col-md-8">
+                <div class="col-12 col-md-8">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body">
                             <h5 class="fw-bold mb-3">📈 Your Progress</h5>
@@ -256,7 +274,7 @@
                 </div>
 
                 <!-- Recent Activity -->
-                <div class="col-md-4">
+                <div class="col-12 col-sm-6 col-md-4">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body">
                             <h5 class="fw-bold mb-3">🕐 Recent Activity</h5>

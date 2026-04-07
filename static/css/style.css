@@ -34,6 +34,11 @@ body {
 /* ══════════════════════════════════════════════
    SIDEBAR
 ══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+}
 .sidebar {
     background: #ffffff !important;
     border-right: 1px solid #e8ecf4;
