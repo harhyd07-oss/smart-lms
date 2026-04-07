@@ -73,28 +73,68 @@
                     </p>
                     <form method="POST" action="/dashboard" id="search-form">
                         <div class="row g-2">
-    <div class="col-12 col-md-9">
-        <input
-            type="text"
-            class="form-control"
-            name="search"
-            id="dashboard-search"
-            placeholder="e.g. Merge Sort, Python basics..."
-            value="{{ search_query }}"
-        >
-    </div>
-    <div class="col-12 col-md-3">
-        <button type="submit"
-                class="btn btn-primary w-100"
-                id="search-btn">
-            🔍 Search
-        </button>
-    </div>
-</div>
-                            <input
+                          <div class="col-12 col-md-9">
+                              <input
                                 type="text"
                                 class="form-control"
                                 name="search"
+                                id="dashboard-search"
+                                placeholder="e.g. Merge Sort, Python basics..."
+                                value="{{ search_query }}"
+                            >
+                        </div>
+                    </form>
+
+                    <!-- Quick suggestions -->
+                    {% if not search_query %}
+                    <div class="d-flex gap-2 flex-wrap mt-3">
+                        {% for suggestion in ['Merge sort algorithm', 'Python basics',
+                                          'SQL joins tutorial', 'Operating systems',
+                                          'Machine learning intro'] %}
+                        <form method="POST" action="/dashboard">
+                            <input type="hidden" name="search"
+                                   value="{{ suggestion }}">
+                            <button type="submit"
+                                    class="btn btn-outline-primary btn-sm">
+                                {{ suggestion }}
+                            </button>
+                        </form>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="loading" style="display:none;" class="text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted">
+                    🤖 AI is searching and rating resources...<br>
+                    <small>This may take 15-20 seconds</small>
+                </p>
+            </div>
+
+            <!-- ── SEARCH RESULTS ── -->
+            {% if search_error %}
+            <div class="alert alert-warning mb-4">
+                ⚠️ {{ search_error }}
+            </div>
+            {% endif %}
+
+            {% if search_results %}
+            <div class="d-flex justify-content-between
+                        align-items-center mb-3">
+                <h5 class="fw-bold mb-0">
+                    Results for "{{ search_query }}"
+                </h5>
+                <small class="text-muted">
+                    {{ search_results|length }} resource(s) found from internet
+                </small>
+            </div>
+
+            <div class="row g-3 mb-4">
                                 id="dashboard-search"
                                 placeholder="e.g. Merge Sort, Python basics, SQL joins..."
                                 value="{{ search_query }}"
